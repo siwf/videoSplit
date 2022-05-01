@@ -45,10 +45,10 @@ const videoSplit: VideoSplit = function (videoConfig: VideoConfig): any {
   // 剩余时长小于最小时间间隔
   let isEnd: Boolean = false
   while (!isEnd) {
-    videoConfig.fileRemainTime = <number>videoConfig.fileRemainTime - globalConfig.intervalTime;
     if (videoConfig.fileRemainTime < globalConfig.intervalTime) {
       isEnd = true
     }
+    videoConfig.fileRemainTime = <number>videoConfig.fileRemainTime - globalConfig.intervalTime;
     setTimeout(() => {
       ffmpeg(videoConfig.fileFullPath, (err, video) => {
         if (err) {
