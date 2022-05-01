@@ -49,7 +49,9 @@ const videoSplit: VideoSplit = function (videoConfig: VideoConfig): any {
       isEnd = true
     }
     videoConfig.fileRemainTime = <number>videoConfig.fileRemainTime - globalConfig.intervalTime;
-    setTimeout(() => {
+    new Promise((resolve, reject) => {
+
+      const fileIndex = videoConfig.fileIndex++;
       ffmpeg(videoConfig.fileFullPath, (err, video) => {
         if (err) {
           console.log(err)
@@ -69,19 +71,22 @@ const videoSplit: VideoSplit = function (videoConfig: VideoConfig): any {
         ])
         .output(`${globalConfig.fileOutputPath}/${videoConfig.fileName}_${videoConfig.fileIndex}.${videoConfig.fileType}`)
         .on('start', (command) => {
-          console.log('处理中...', command) })
-        .on('progress', (progress) => { console.log('进行中，完成' + progress.percent + '%') })
+          console.log('处理中...', command)
+        })
+        .on('progress', (progress) => {
+          // console.log(`进行中，第${fileIndex}个， 已完成${progress.percent}%`)
+        })
         .on('error', (err) => {
           console.log(err.message)
+          reject(err.message)
         })
-        .on('end', (str) => {
-          console.log('进行中，完成100%')
-          console.log('success!')
+        .on('end', () => {
+          console.log(`第${fileIndex}个，已完成100%,success!`)
+          resolve(videoConfig)
         })
         .run()
-        videoConfig.fileIndex++;
-        videoConfig.fileStartTime += globalConfig.intervalTime
-    }, 0)
+      videoConfig.fileStartTime += globalConfig.intervalTime
+    })
   }
 }
 
