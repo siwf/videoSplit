@@ -6,7 +6,8 @@
   "author": "siwenfeng <siwenfeng@sunshineftg.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon --watch src/**/*.ts --exec \"ts-node\" src/app.ts"
+    "split": "nodemon --watch src/**/*.ts --exec \"ts-node\" src/app.ts",
+    "dev": "npm run split"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",

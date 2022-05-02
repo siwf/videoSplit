@@ -5,7 +5,6 @@ import * as  path from 'path';
 import * as fs from 'fs';
 
 
-
 // 每个视频项目的信息
 interface VideoConfig {
   fileIndex: number; // 分割后的视频序号
@@ -25,7 +24,8 @@ interface GlobalConfig {
   readonly fileInputPath: string; // 文件的输入路径
   readonly fileOutputPath: string; // 文件的输出路径
   readonly intervalTime: number; // 每个视频的切割时间
-  fileList: Array<VideoConfig> // 视频列表信息
+  fileList: Array<VideoConfig>; // 视频列表信息
+  readonly fileBgMusic: string;
 }
 // 全局配置
 const globalConfig: GlobalConfig = {
@@ -33,7 +33,8 @@ const globalConfig: GlobalConfig = {
   fileInputPath: path.join('/Users/swf/Downloads/before'),
   fileOutputPath: path.join('/Users/swf/Downloads/after'),
   intervalTime: 10 * 60, // 十分钟
-  fileList: []
+  fileList: [],
+  fileBgMusic: path.join(__dirname, '/assets/bgmusic/bg.mp3')
 }
 // 视频分割
 type VideoSplit = (videoConfig: VideoConfig) => any;
@@ -81,7 +82,7 @@ const videoSplit: VideoSplit = function (videoConfig: VideoConfig): any {
           reject(err.message)
         })
         .on('end', () => {
-          console.log(`第${fileIndex}个，已完成100%,success!`)
+          console.log(`第${fileIndex + 1}个，已完成100%,success!`)
           resolve(videoConfig)
         })
         .run()
@@ -91,7 +92,7 @@ const videoSplit: VideoSplit = function (videoConfig: VideoConfig): any {
 }
 
 
-const fileDisplay: (globalConfig: GlobalConfig) => Array<Promise<VideoConfig>> = function (globalConfig: GlobalConfig): Array<Promise<VideoConfig>> {
+const fileDisplay:  (globalConfig: GlobalConfig) => Array<Promise<VideoConfig>> =  function (globalConfig: GlobalConfig): Array<Promise<VideoConfig>> {
   //根据文件路径读取文件，返回文件列表  
   return fs.readdirSync(globalConfig.fileInputPath).map(filename => {
 
@@ -145,11 +146,21 @@ const videoInfo: (videoConfig: VideoConfig) => Promise<number | string> = functi
   })
 }
 
-ffmpeg.setFfprobePath(ffprobePath.path)
-ffmpeg.setFfmpegPath(ffmpegPath.path)
-fileDisplay(globalConfig)
-// Promise.all(fileDisplay(globalConfig)).then(e => {
-//   console.log(globalConfig)
-// }).catch(err => {
-//   console.log(err)
-// })
+const main: () => void = function():void {
+  ffmpeg.setFfprobePath(ffprobePath.path)
+  ffmpeg.setFfmpegPath(ffmpegPath.path)
+  const inputDirIsExists = fs.existsSync(globalConfig.fileInputPath);
+  const outputDiIsExists = fs.existsSync(globalConfig.fileOutputPath)
+  if (!inputDirIsExists) {
+    fs.mkdirSync(globalConfig.fileInputPath)
+  }
+  if (!outputDiIsExists) {
+    fs.mkdirSync(globalConfig.fileOutputPath)
+  }
+  fileDisplay(globalConfig)
+  
+}
+
+
+// 入口
+main()
