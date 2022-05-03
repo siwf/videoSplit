@@ -33,8 +33,8 @@ interface GlobalConfig {
 }
 // 全局配置
 const globalConfig: GlobalConfig = {
-  fileTypeList: ['mp4', 'avi', 'flv'],
-  fileInputPath: path.join('/Users/swf/Downloads/before'),
+  fileTypeList: ['mp4', 'avi', 'flv', 'mkv'],
+  fileInputPath: path.join('/Users/swf/Downloads/'),
   fileOutputPath: path.join('/Users/swf/Downloads/after'),
   intervalTime: 10 * 60, // 十分钟
   fileBgMusic: path.join(__dirname, '/assets/bgmusic/bg.mp3'),
@@ -65,7 +65,7 @@ const videoSplit: VideoSplit = function (videoConfig: VideoConfig): Array<Promis
     const intervalTime:number = <number>splitVideo.fileRemainTime - globalConfig.intervalTime;
     splitVideo.fileRemainTime = intervalTime;
     splitVideo.fileStartTime += globalConfig.intervalTime
-    splitVideo.fileName = `${videoConfig.fileName}_${splitVideo.fileIndex}.${videoConfig.fileType}`
+    splitVideo.fileName = `${videoConfig.fileName}_${splitVideo.fileIndex}.mp4`
     splitVideo.fileFullPath = `${globalConfig.fileOutputPath}/${splitVideo.fileName}`
     splitVideo.fileTotalTime = intervalTime > 0 ? globalConfig.intervalTime : (-intervalTime)
     videoConfig.fileSplitList.push(splitVideo)
@@ -195,3 +195,4 @@ const main: () => void = function():void {
 
 // 入口
 main()
+console.log('任务结束')
