@@ -31,7 +31,7 @@ interface GlobalConfig {
   readonly intervalTime: number; // 每个视频的切割时间
   readonly fileBgMusic: string; // 背景音乐全路径
   fileList: Array<VideoConfig>;
-  fileStartTime: number;
+  screentStartTime: number;
   fileScreenName: string;
 }
 // 全局配置
@@ -39,10 +39,10 @@ const globalConfig: GlobalConfig = {
   fileTypeList: ['mp4', 'avi', 'flv', 'mkv'],
   fileInputPath: path.join('/Users/swf/Downloads/before'),
   fileOutputPath: path.join('/Users/swf/Downloads/after'),
-  intervalTime: 10 * 60, // 十分钟
+  intervalTime: 5 * 60, // 十分钟
   fileBgMusic: path.join(__dirname, '/assets/bgmusic/bg.mp3'),
   fileList: [],
-  fileStartTime: 15,
+  screentStartTime: 20, // 截图的时间
   fileScreenName: ''
 }
 // 视频分割
@@ -140,7 +140,7 @@ const fileDisplay:  (globalConfig: GlobalConfig) => Array<Promise<VideoConfig>> 
                 let fileSplitListArr;
                 videoConfig.fileTotalTime = e;
                 videoConfig.fileRemainTime = e;
-                videoConfig.fileStartTime = globalConfig.fileStartTime; // 默认从头开始切割
+                videoConfig.fileStartTime = 0; // 默认从头开始切割
                 videoConfig.fileIndex = 0;
                 // 默认第一个是父节点的信息
                 videoConfig.fileSplitList = [].concat({
@@ -197,8 +197,8 @@ const videoScreenShoot: (videoConfig: VideoConfig) => Promise<any> = function(vi
       resolve(true)
     })
     .screenshots({
-      timestamps: [globalConfig.fileStartTime],
-      filename: globalConfig.fileScreenName,
+      timestamps: [globalConfig.screentStartTime],
+      filename: globalConfig.fileScreenName + '.png',
       count: 1,
       folder: globalConfig.fileOutputPath
     })
