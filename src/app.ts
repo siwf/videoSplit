@@ -3,6 +3,7 @@ import * as  ffprobePath from '@ffprobe-installer/ffprobe';
 import * as  ffmpeg from 'fluent-ffmpeg';
 import * as  path from 'path';
 import * as fs from 'fs';
+// import { spawn }  from 'child_process';
 
 // 分片后的视频信息
 
@@ -29,16 +30,20 @@ interface GlobalConfig {
   readonly fileOutputPath: string; // 文件的输出路径
   readonly intervalTime: number; // 每个视频的切割时间
   readonly fileBgMusic: string; // 背景音乐全路径
-  fileList: Array<VideoConfig>
+  fileList: Array<VideoConfig>;
+  fileStartTime: number;
+  fileScreenName: string;
 }
 // 全局配置
 const globalConfig: GlobalConfig = {
   fileTypeList: ['mp4', 'avi', 'flv', 'mkv'],
-  fileInputPath: path.join('/Users/swf/Downloads/'),
+  fileInputPath: path.join('/Users/swf/Downloads/before'),
   fileOutputPath: path.join('/Users/swf/Downloads/after'),
   intervalTime: 10 * 60, // 十分钟
   fileBgMusic: path.join(__dirname, '/assets/bgmusic/bg.mp3'),
-  fileList: []
+  fileList: [],
+  fileStartTime: 15,
+  fileScreenName: ''
 }
 // 视频分割
 type VideoSplit = (videoConfig: VideoConfig) => Array<Promise<SplitVideo>>;
@@ -64,12 +69,12 @@ const videoSplit: VideoSplit = function (videoConfig: VideoConfig): Array<Promis
     
     const intervalTime:number = <number>splitVideo.fileRemainTime - globalConfig.intervalTime;
     splitVideo.fileRemainTime = intervalTime;
-    splitVideo.fileStartTime += globalConfig.intervalTime
-    splitVideo.fileName = `${videoConfig.fileName}_${splitVideo.fileIndex}.mp4`
+    splitVideo.fileStartTime += globalConfig.intervalTime - 1  // 剪掉一帧用来添加封面图片 logo集数
+    splitVideo.fileName = `${videoConfig.fileName}_${splitVideo.fileIndex + 1}.mp4`
     splitVideo.fileFullPath = `${globalConfig.fileOutputPath}/${splitVideo.fileName}`
     splitVideo.fileTotalTime = intervalTime > 0 ? globalConfig.intervalTime : (-intervalTime)
     videoConfig.fileSplitList.push(splitVideo)
-
+    // console.log(videoConfig)
     splitPromise.push(new Promise((resolve, reject) => {
       ffmpeg(videoConfig.fileFullPath, (err, video) => {
         if (err) {
@@ -131,10 +136,11 @@ const fileDisplay:  (globalConfig: GlobalConfig) => Array<Promise<VideoConfig>> 
             // globalConfig.fileList.push(videoConfig)
             // 开始转换
             try {
-              videoInfo(videoConfig).then(e => {
+              videoInfo(videoConfig).then(async (e) => {
+                let fileSplitListArr;
                 videoConfig.fileTotalTime = e;
                 videoConfig.fileRemainTime = e;
-                videoConfig.fileStartTime = 0; // 默认从头开始切割
+                videoConfig.fileStartTime = globalConfig.fileStartTime; // 默认从头开始切割
                 videoConfig.fileIndex = 0;
                 // 默认第一个是父节点的信息
                 videoConfig.fileSplitList = [].concat({
@@ -146,13 +152,12 @@ const fileDisplay:  (globalConfig: GlobalConfig) => Array<Promise<VideoConfig>> 
                   fileRemainTime: videoConfig.fileRemainTime,
                   fileStartTime: videoConfig.fileStartTime
                 })
-                
-                Promise.all(videoSplit(videoConfig)).then(e => {
-                  // const lastIndex = e.length - 1;
-                  console.log(e)
-                  resolve(videoConfig)
-                })
-                // resolve(videoConfig)
+                await videoScreenShoot(videoConfig)
+                fileSplitListArr = await Promise.all(videoSplit(videoConfig))
+                console.log(fileSplitListArr)
+                console.log('大功告成,温风点火就是🔥')
+                // await Promise.all(addImageToVideo(fileSplitListArr))
+                resolve(videoConfig)
               })
             } catch (error) {
               console.log(eror)
@@ -176,7 +181,31 @@ const videoInfo: (videoConfig: VideoConfig) => Promise<any> = function (videoCon
   })
 }
 
-const main: () => void = function():void {
+const videoScreenShoot: (videoConfig: VideoConfig) => Promise<any> = function(videoConfig: VideoConfig): Promise<any>{
+
+  return new Promise((resolve, reject) => {
+    globalConfig.fileScreenName = videoConfig.fileName
+    ffmpeg(videoConfig.fileFullPath)
+    .on('filenames', function(filenames) {
+      console.log('Will generate ' + filenames.join(', '))
+    })
+    .on('start', (command) => {
+      console.log('处理中...', command)
+    })
+    .on('end', function() {
+      console.log('截图成功')
+      resolve(true)
+    })
+    .screenshots({
+      timestamps: [globalConfig.fileStartTime],
+      filename: globalConfig.fileScreenName,
+      count: 1,
+      folder: globalConfig.fileOutputPath
+    })
+  })
+}
+
+const main:  () => void = function(): void{
   // fix bug 路径不存在
   ffmpeg.setFfprobePath(ffprobePath.path)
   ffmpeg.setFfmpegPath(ffmpegPath.path)
@@ -195,4 +224,3 @@ const main: () => void = function():void {
 
 // 入口
 main()
-console.log('任务结束')
