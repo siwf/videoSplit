@@ -37,8 +37,8 @@ interface GlobalConfig {
 // 全局配置
 const globalConfig: GlobalConfig = {
   fileTypeList: ['mp4', 'avi', 'flv', 'mkv'],
-  fileInputPath: path.join('/Users/swf/Downloads/before'),
-  fileOutputPath: path.join('/Users/swf/Downloads/after'),
+  fileInputPath: path.join(__dirname, '../', 'input'),
+  fileOutputPath: path.join(__dirname, '../', 'output'),
   intervalTime: 5 * 60, // 十分钟
   fileBgMusic: path.join(__dirname, '/assets/bgmusic/bg.mp3'),
   fileList: [],
